@@ -1,0 +1,27 @@
+webling:
+  base_url: "https://api.webling.ch"
+  api_key: "${WEBLING_API_KEY}"
+
+smtp:
+  host: "${SMTP_HOST}"
+  port: "${SMTP_PORT:-587}"
+  username: "${SMTP_USERNAME}"
+  password: "${SMTP_PASSWORD}"
+  from_address: "${SMTP_USERNAME}"
+
+admin:
+  email: "${ADMIN_EMAIL}"
+
+testmodus: true
+
+logging:
+  level: "INFO"
+  file: "data/logs/webling-automation.log"
+  max_bytes: 1048576
+  backup_count: 5
+
+module:
+  geburtstagsmails: false
+  mitgliedsjubilaeen: false
+  adminberichte: false
+  health_checks: false
