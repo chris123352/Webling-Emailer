@@ -42,6 +42,7 @@ jobs:
         if: steps.schedule.outputs.should_run == 'true'
         env:
           WEBLING_API_KEY: ${{ secrets.WEBLING_API_KEY }}
+          WEBLING_URL: ${{ secrets.WEBLING_URL }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}

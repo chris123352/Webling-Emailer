@@ -76,6 +76,7 @@ ruff check .
 Unterstützte Umgebungsvariablen:
 
 - `WEBLING_API_KEY`
+- `WEBLING_URL`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
 - `SMTP_FROM_ADDRESS` (optional; sonst wird `SMTP_USERNAME` als Absender verwendet)
 - `ADMIN_EMAIL`
@@ -85,6 +86,7 @@ Unterstützte Umgebungsvariablen:
 Lege im GitHub-Repository unter **Settings → Secrets and variables → Actions** folgende Secrets an:
 
 - `WEBLING_API_KEY`
+- `WEBLING_URL`
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USERNAME`
