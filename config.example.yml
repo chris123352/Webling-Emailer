@@ -1,5 +1,5 @@
 webling:
-  url: ""
+  url: "${WEBLING_URL}"
   api_key_env: "WEBLING_API_KEY"
   timeout_seconds: 15
 

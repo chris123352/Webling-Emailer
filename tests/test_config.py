@@ -32,6 +32,28 @@ admin:
     assert config["smtp"]["host"] == "smtp.example.org"
 
 
+def test_load_config_expands_webling_url_from_environment(tmp_path) -> None:
+    config_file = tmp_path / "config.yml"
+    config_file.write_text(
+        """
+webling:
+  url: "${WEBLING_URL}"
+  api_key_env: "WEBLING_API_KEY"
+""",
+        encoding="utf-8",
+    )
+
+    config = load_config(
+        config_file,
+        environment={
+            "WEBLING_URL": "https://verein.webling.ch",
+            "WEBLING_API_KEY": "test-key",
+        },
+    )
+
+    assert config["webling"]["url"] == "https://verein.webling.ch"
+
+
 def test_diagnostic_validation_allows_missing_smtp_configuration(tmp_path) -> None:
     config_file = tmp_path / "config.yml"
     config_file.write_text(
