@@ -1,0 +1,6 @@
+Hallo {first_name} {last_name},
+
+alles Gute zu deinem {age}. Geburtstag!
+
+Herzliche Grüße
+Dein Verein

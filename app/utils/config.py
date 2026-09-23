@@ -11,20 +11,37 @@ from typing import Any
 import yaml
 
 ENV_PATTERN = re.compile(r"\$\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?::-(?P<default>[^}]*))?\}")
-REQUIRED_VALUES = (
-    ("webling", "api_key"),
+WEBLING_REQUIRED_VALUES = (
+    ("webling", "url"),
+    ("webling", "api_key_env"),
+)
+PRODUCTION_REQUIRED_VALUES = (
     ("smtp", "host"),
     ("smtp", "port"),
-    ("smtp", "username"),
-    ("smtp", "password"),
+    ("smtp", "username_env"),
+    ("smtp", "password_env"),
     ("admin", "email"),
 )
+TEST_SEND_REQUIRED_VALUES = (
+    ("smtp", "host"),
+    ("smtp", "port"),
+    ("smtp", "username_env"),
+    ("smtp", "password_env"),
+    ("test", "enabled"),
+    ("test", "redirect_all_mail"),
+    ("test", "recipients"),
+)
+WEEKLY_REPORT_REQUIRED_VALUES = (
+    ("smtp", "host"),
+    ("smtp", "port"),
+    ("smtp", "username_env"),
+    ("smtp", "password_env"),
+    ("weekly_report", "enabled"),
+    ("weekly_report", "recipients"),
+)
 ENVIRONMENT_OVERRIDES = {
-    "WEBLING_API_KEY": ("webling", "api_key"),
     "SMTP_HOST": ("smtp", "host"),
     "SMTP_PORT": ("smtp", "port"),
-    "SMTP_USERNAME": ("smtp", "username"),
-    "SMTP_PASSWORD": ("smtp", "password"),
     "ADMIN_EMAIL": ("admin", "email"),
 }
 
@@ -36,7 +53,7 @@ class ConfigurationError(ValueError):
 def load_config(
     path: str | Path = "config.yml", environment: Mapping[str, str] | None = None
 ) -> dict[str, Any]:
-    """Load YAML configuration, expand environment variables and validate required values."""
+    """Load YAML configuration and expand environment variables."""
     config_path = Path(path)
     if not config_path.is_file():
         raise ConfigurationError(f"Konfigurationsdatei nicht gefunden: {config_path}")
@@ -55,22 +72,58 @@ def load_config(
     active_environment = dict(os.environ if environment is None else environment)
     config = _expand_environment_values(raw_config, active_environment)
     _apply_environment_overrides(config, active_environment)
-    validate_config(config)
     return config
 
 
-def validate_config(config: Mapping[str, Any]) -> None:
-    """Raise a descriptive error when required nested configuration values are empty."""
+def validate_for_mode(
+    config: Mapping[str, Any], mode: str, environment: Mapping[str, str] | None = None
+) -> None:
+    """Validate only the configuration and secrets required by the selected mode."""
+    supported_modes = {
+        "diagnostic",
+        "birthday-test",
+        "birthday-send-test",
+        "weekly-report",
+        "production",
+    }
+    if mode not in supported_modes:
+        raise ConfigurationError(f"Unbekannter Ausführungsmodus: {mode}")
+
+    required_values = WEBLING_REQUIRED_VALUES
+    if mode == "production":
+        required_values += PRODUCTION_REQUIRED_VALUES
+    if mode == "birthday-send-test":
+        required_values += TEST_SEND_REQUIRED_VALUES
+    if mode == "weekly-report":
+        required_values += WEEKLY_REPORT_REQUIRED_VALUES
+
     missing = []
-    for section, key in REQUIRED_VALUES:
+    for section, key in required_values:
         section_values = config.get(section)
         value = section_values.get(key) if isinstance(section_values, Mapping) else None
         if value is None or (isinstance(value, str) and not value.strip()):
             missing.append(f"{section}.{key}")
 
+    active_environment = os.environ if environment is None else environment
+    environment_keys = [("webling", "api_key_env")]
+    if mode in {"birthday-send-test", "weekly-report", "production"}:
+        environment_keys.extend(
+            [("smtp", "username_env"), ("smtp", "password_env")]
+        )
+    for section, key in environment_keys:
+        environment_name = _get_value(config, section, key)
+        if isinstance(environment_name, str) and environment_name.strip():
+            if not active_environment.get(environment_name):
+                missing.append(f"Umgebungsvariable {environment_name}")
+
     if missing:
         formatted_values = ", ".join(missing)
         raise ConfigurationError(f"Fehlende Pflichtwerte in der Konfiguration: {formatted_values}")
+
+
+def _get_value(config: Mapping[str, Any], section: str, key: str) -> Any:
+    section_values = config.get(section)
+    return section_values.get(key) if isinstance(section_values, Mapping) else None
 
 
 def _expand_environment_values(value: Any, environment: Mapping[str, str]) -> Any:
