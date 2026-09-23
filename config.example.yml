@@ -1,18 +1,29 @@
 webling:
-  base_url: "https://api.webling.ch"
-  api_key: "${WEBLING_API_KEY}"
+  url: ""
+  api_key_env: "WEBLING_API_KEY"
+  timeout_seconds: 15
 
 smtp:
   host: "${SMTP_HOST}"
   port: "${SMTP_PORT:-587}"
-  username: "${SMTP_USERNAME}"
-  password: "${SMTP_PASSWORD}"
-  from_address: "${SMTP_USERNAME}"
+  username_env: "SMTP_USERNAME"
+  password_env: "SMTP_PASSWORD"
+  from_address: "${SMTP_FROM_ADDRESS:-}"
+  use_tls: true
 
 admin:
   email: "${ADMIN_EMAIL}"
 
-testmodus: true
+weekly_report:
+  enabled: true
+  recipients:
+    - "C.Dorn1@gmx.de"
+    - "vorstand@ssv-schmidhausen.de"
+
+test:
+  enabled: true
+  redirect_all_mail: true
+  recipients: []
 
 logging:
   level: "INFO"

@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
   schedule:
     # Both UTC slots are needed because GitHub Actions cron does not support time zones.
-    - cron: "0 6 * * *"
-    - cron: "0 7 * * *"
+    - cron: "0 6 * * 0"
+    - cron: "0 7 * * 0"
 
 jobs:
   automation:
@@ -24,7 +24,7 @@ jobs:
         id: schedule
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ] && [ "$(TZ=Europe/Berlin date +%H)" != "08" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] && { [ "$(TZ=Europe/Berlin date +%u)" != "7" ] || [ "$(TZ=Europe/Berlin date +%H)" != "08" ]; }; then
             echo "should_run=false" >> "$GITHUB_OUTPUT"
           else
             echo "should_run=true" >> "$GITHUB_OUTPUT"
@@ -38,7 +38,7 @@ jobs:
         if: steps.schedule.outputs.should_run == 'true'
         run: cp config.example.yml config.yml
 
-      - name: Automation ausführen
+      - name: Wochenbericht ausführen
         if: steps.schedule.outputs.should_run == 'true'
         env:
           WEBLING_API_KEY: ${{ secrets.WEBLING_API_KEY }}
@@ -46,5 +46,6 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_ADDRESS: ${{ secrets.SMTP_FROM_ADDRESS }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-        run: python -m app.main
+        run: python -m app.main weekly-report
